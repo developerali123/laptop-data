@@ -1,0 +1,3 @@
+Name: ali mirza
+Age: 20
+Grade: A
