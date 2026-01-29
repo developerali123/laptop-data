@@ -1,0 +1,75 @@
+/* PimForce Django Admin enhancements - safe, non-invasive */
+
+/* Typography & base */
+:root {
+  --pf-primary: #6d28d9; /* violet-700 */
+  --pf-primary-600: #7c3aed; /* violet-600 */
+  --pf-green: #10b981; /* emerald-500 */
+  --pf-amber: #f59e0b; /* amber-500 */
+  --pf-rose: #ef4444;  /* rose-500 */
+}
+
+.module h2, .module caption, #content h1, #content h2, #content h3 {
+  letter-spacing: .2px;
+}
+
+/* Header branding */
+#header, .module caption, .inline-group h2 {
+  background: linear-gradient(90deg, var(--pf-primary) 0%, var(--pf-primary-600) 100%);
+}
+
+#header #branding h1, #header #branding h1 a:link, #header #branding h1 a:visited {
+  color: #fff;
+}
+
+/* Action buttons */
+.object-tools a:link, .object-tools a:visited, .submit-row input.default {
+  background-color: var(--pf-primary);
+  border-color: var(--pf-primary);
+}
+.object-tools a:hover, .submit-row input.default:hover {
+  background-color: var(--pf-primary-600);
+  border-color: var(--pf-primary-600);
+}
+
+/* List table improvements */
+.change-list .results table tbody tr:hover {
+  background: #faf5ff; /* violet-50 */
+}
+.change-list .results table thead th.sorted .sortoptions a:focus,
+.change-list .results table thead th.sorted .sortoptions a:hover {
+  color: var(--pf-primary);
+}
+
+/* Badges: used by IntegrationAdmin.status_badge */
+.pf-badge {
+  display: inline-block;
+  font-size: 12px;
+  line-height: 1;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb; /* gray-200 */
+  background: #f9fafb; /* gray-50 */
+}
+.pf-badge--active {
+  color: #065f46;           /* emerald-800 */
+  background: #ecfdf5;      /* emerald-50 */
+  border-color: #a7f3d0;    /* emerald-200 */
+}
+.pf-badge--paused {
+  color: #7c2d12;           /* amber-800 */
+  background: #fffbeb;      /* amber-50 */
+  border-color: #fde68a;    /* amber-200 */
+}
+.pf-badge--disabled {
+  color: #7f1d1d;           /* rose-800 */
+  background: #fff1f2;      /* rose-50 */
+  border-color: #fecdd3;    /* rose-200 */
+}
+
+/* Collapsible fieldsets spacing */
+.inline-group, .module.aligned, .module {
+  border-radius: 10px;
+  overflow: hidden;
+}
+

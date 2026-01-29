@@ -1,0 +1,134 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+   id          Int     @id @default(autoincrement())
+   UserName    String  @unique
+   Password    String
+   Role        Role    @default(cashier)
+   OutletCode  String?
+   pageaccess  String?
+   createdAt  DateTime @default(now())
+   updatedAt  DateTime @updatedAt
+}
+
+enum Role {
+   admin
+   cashier
+}
+
+model Category {
+   id           Int           @id @default(autoincrement())
+   name         String        @unique
+   subcategories Subcategory[]
+   items       Item[]   // Back-reference to Item
+   createdAt   DateTime      @default(now())
+   updatedAt   DateTime      @updatedAt
+}
+
+model Subcategory {
+   id          Int       @id @default(autoincrement())
+   name        String    @unique
+   categoryId  Int
+   items       Item[]   // Back-reference to Item
+   category    Category  @relation(fields: [categoryId], references: [id])
+   createdAt  DateTime  @default(now())
+   updatedAt  DateTime  @updatedAt
+}
+
+model UOM {
+   id          Int      @id @default(autoincrement())
+   name        String   @unique
+   symbol      String   @unique
+   items       Item[]   // Back-reference to Item
+   uomitems    UOMItem[] 
+   description String?  // Optional description for the unit
+   createdAt  DateTime @default(now())
+   updatedAt  DateTime @updatedAt
+}
+
+model Item {
+   id                     Int       @id @default(autoincrement())
+   no                     String    @unique
+   description            String
+   uomId                  Int?      // Reference to UOM model
+   uom                    UOM?      @relation(fields: [uomId], references: [id])
+   unitprice              Float?
+   costingmethod          String?
+   lastdirectcost         Float?
+   vendoritemno           String?
+   blocked                Int?
+   taxgroupcode           String?
+   minimumorderquantity   Float?
+   maximumorderquantity   Float?
+   punchunitofmeasure     String?
+   categoryId             Int?      // Reference to Category model
+   category               Category? @relation(fields: [categoryId], references: [id])
+   subcategoryId          Int?      // Reference to Subcategory model
+   subcategory            Subcategory? @relation(fields: [subcategoryId], references: [id])
+   rangeId                Int?      // Reference to Range model
+   range                  Range?    @relation(fields: [rangeId], references: [id])
+   seasoncode             String?
+   createdAt              DateTime  @default(now())
+   updatedAt              DateTime  @updatedAt
+}
+
+model Range {
+   id        Int     @id @default(autoincrement())
+   range     String  @unique
+   items     Item[]  // Back-reference to Item
+   createdAt DateTime @default(now())
+   updatedAt DateTime @updatedAt
+}
+
+model Location {
+   id        Int     @id @default(autoincrement())
+   code      String  @unique
+   name      String
+   address   String?
+   city      String?
+   brand     String?
+   createdAt DateTime @default(now())
+   updatedAt DateTime @updatedAt
+}
+
+model UOMItem {
+   id          Int     @id @default(autoincrement())
+   itemno      String  @unique
+   uomId       Int     // Reference to UOM model
+   uom         UOM     @relation(fields: [uomId], references: [id])
+   quantityuom Float
+   createdAt  DateTime @default(now())
+   updatedAt  DateTime @updatedAt
+}
+
+model MasterInfoCode {
+   id          Int     @id @default(autoincrement())
+   code        String  @unique
+   description String
+   prompt      String
+   createdAt  DateTime @default(now())
+   updatedAt  DateTime @updatedAt
+}
+
+model WLCM {
+   id        Int     @id @default(autoincrement())
+   first     String
+   second    String?
+   third     String?
+   createdAt DateTime @default(now())
+   updatedAt DateTime @updatedAt
+}
+
