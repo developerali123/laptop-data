@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; connect-src 'self' http://localhost:3000;">
+    <title>Lucky Draw</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        @media print {
+            @page { size: 3in auto; margin: 4mm; }
+            body {
+                font-family: 'Courier New', monospace;
+                font-size: 12px;
+                line-height: 1.3;
+                color: #000 !important;
+                -webkit-text-fill-color: #000 !important;
+                background: #fff;
+                width: 3in;
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+            body * { visibility: hidden; }
+            #ticket-print, #ticket-print * {
+                visibility: visible;
+                color: #000 !important;
+                -webkit-text-fill-color: #000 !important;
+            }
+            #ticket-print {
+                position: absolute; left: 0; top: 0; width: 3in;
+                display: block !important;
+            }
+            .no-print { display: none; }
+        }
+        .modal-panel { transition: all 0.3s ease-in-out; }
+        .loader {
+            border: 4px solid #4a5568; 
+            border-top: 4px solid #6366f1; 
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white flex items-center justify-center min-h-screen">
+
+    <div class="w-full max-w-2xl bg-gray-800 rounded-2xl shadow-2xl p-4 space-y-2">
+        <div>
+            <h1 class="text-3xl font-bold text-center text-indigo-400">Lucky Draw</h1>
+        </div>
+
+        <!-- Search Section -->
+        <div id="searchSection" class="space-y-8">
+            <div>
+                <label for="transactionIdInput" class="text-sm font-medium text-gray-300">Receipt No</label>
+                <input type="text" id="transactionIdInput" class="mt-1 w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Enter Receipt No">
+            </div>
+            <button id="searchBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 flex items-center justify-center">
+                Search Recipt
+            </button>
+        </div>
+
+        <!-- Loading Spinner -->
+        <div id="loadingSection" class="hidden flex justify-center items-center py-8">
+            <div class="loader"></div>
+        </div>
+
+        <!-- Message Area for errors or info -->
+        <div id="messageArea" class="text-center text-red-400 font-medium hidden"></div>
+
+        <!-- Customer Display Section -->
+        <div id="customerDisplaySection" class="hidden">
+            <div id="printable-area" class="bg-gray-700 p-6 rounded-lg space-y-3">
+                <!-- <h2 class="text-xl font-bold text-center text-gray-100 border-b border-gray-600 pb-3 mb-4">Lucky Draw Coupon</h2> -->
+                <div class="grid grid-cols-1 md:grid-cols-1 gap-6">
+                    <div>
+                        <p class="text-sm text-gray-400">Recipt No</p>
+                        <p id="displayTransactionId" class="font-semibold text-lg"></p>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <p class="text-sm text-gray-400 mb-2">Coupons</p>
+                    <div id="couponList" class="flex flex-wrap gap-2 max-w-full">
+                        <!-- coupon badges injected here -->
+                    </div>
+                </div>
+            </div>
+            <!-- Inline customer controls (below coupons) -->
+            <div class="mt-2 space-y-2 no-print">
+                <h3 class="text-lg font-semibold text-gray-100">Customer Info</h3>
+                <!-- Single Row: Phone, Name, Add Button -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+                    <div>
+                        <label for="cellInput" class="text-sm font-medium text-gray-300">Phone Number</label>
+                        <input type="text" id="cellInput" inputmode="numeric" maxlength="20" class="mt-1 w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="e.g. 03001234567">
+                        <p id="cellError" class="mt-2 text-sm text-red-400 hidden">Phone number must be at least 11 digits.</p>
+                    </div>
+                    <div>
+                        <label for="nameInput" class="text-sm font-medium text-gray-300">Customer Name</label>
+                        <input type="text" id="nameInput" class="mt-1 w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Enter Customer Name">
+                    </div>
+                    <div class="flex items-end">
+                        <button id="addCustomerBtn" class="w-full md:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition">Add Customer</button>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-6 flex space-x-4 no-print">
+                <button id="printBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition">Print</button>
+                <button id="searchAgainBtn" class="w-full bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 px-4 rounded-lg transition">Search Again</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Thermal ticket print container (shown only during window.print) -->
+    <div id="ticket-print" style="display:none;">
+        <h2 style="text-align:center;font-size:14px;margin:0 0 5px 0;border-bottom:1px dashed #000;padding-bottom:3px;">Lucky Draw Coupons</h2>
+        <pre id="receiptText" style="white-space:pre-wrap;word-wrap:break-word;margin:0;"></pre>
+    </div>
+
+
+    <script>
+        const API_BASE_URL = 'http://localhost:3000';
+        let lastFetchedTx = null;
+
+        // --- DOM ELEMENT REFERENCES ---
+        const searchSection = document.getElementById('searchSection');
+        const loadingSection = document.getElementById('loadingSection');
+        const customerDisplaySection = document.getElementById('customerDisplaySection');
+        const messageArea = document.getElementById('messageArea');
+        // Inline customer controls
+        const cellInput = document.getElementById('cellInput');
+        const nameInput = document.getElementById('nameInput');
+        const addCustomerBtn = document.getElementById('addCustomerBtn');
+
+        const transactionIdInput = document.getElementById('transactionIdInput');
+        const searchBtn = document.getElementById('searchBtn');
+        const printBtn = document.getElementById('printBtn');
+        const searchAgainBtn = document.getElementById('searchAgainBtn');
+
+        // --- UI STATE MANAGEMENT ---
+        function showLoading(isLoading) {
+            if (isLoading) {
+                searchSection.classList.add('hidden');
+                loadingSection.classList.remove('hidden');
+                customerDisplaySection.classList.add('hidden');
+                hideMessage();
+            } else {
+                loadingSection.classList.add('hidden');
+            }
+        }
+
+        function showMessage(text, isError = true) {
+            messageArea.textContent = text;
+            messageArea.className = `text-center font-medium ${isError ? 'text-red-400' : 'text-green-400'}`;
+            messageArea.classList.remove('hidden');
+            // Also show native dialog via preload bridge if available
+            try {
+                if (window.dialog && typeof window.dialog.show === 'function') {
+                    window.dialog.show({
+                        type: isError ? 'error' : 'info',
+                        title: isError ? 'Error' : 'Success',
+                        message: String(text || '')
+                    });
+                }
+            } catch (_) { /* no-op */ }
+        }
+        
+        function hideMessage() {
+            messageArea.classList.add('hidden');
+        }
+
+        function resetUI() {
+            searchSection.classList.remove('hidden');
+            customerDisplaySection.classList.add('hidden');
+            loadingSection.classList.add('hidden');
+            hideMessage();
+            transactionIdInput.value = '';
+            transactionIdInput.focus();
+        }
+
+        // No modal — everything inline
+
+        // --- CORE API LOGIC ---
+        async function handleSearch() {
+            const transactionId = transactionIdInput.value.trim();
+            if (!transactionId) {
+                showMessage('Please enter a Receipt No.');
+                return;
+            }
+
+            showLoading(true);
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/transactions/${encodeURIComponent(transactionId)}`);
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    showMessage(errorData.message || (response.status === 404 ? 'Receipt No not found.' : `Error: ${response.statusText}`));
+                    searchSection.classList.remove('hidden');
+                    return;
+                }
+
+                const payload = await response.json();
+                if (!payload || payload.success !== true || !payload.data || !payload.data.transaction) {
+                    showMessage('Unexpected API response.');
+                    searchSection.classList.remove('hidden');
+                    return;
+                }
+
+                // New backend shape: data.transaction is an object keyed by transactionId with an array of coupons
+                const txMap = payload.data.transaction || {};
+                const txKey = (transactionId in txMap) ? transactionId : Object.keys(txMap)[0];
+                const couponObjs = txKey ? (txMap[txKey] || []) : [];
+                const coupons = couponObjs.map(c => c?.couponNo).filter(Boolean);
+                lastFetchedTx = { transactionId: txKey || transactionId, coupons };
+
+                const hasCustomer = Boolean(payload.hasCustomer) && !!payload.data.customer;
+                const cust = hasCustomer ? (payload.data.customer || {}) : null;
+                displayCustomerData({
+                    TRANSACTIONID: String((cust?.transactionId) ?? txKey ?? transactionId ?? ''),
+                    COUPONS: coupons
+                });
+                // Populate only the input fields (no header display)
+                cellInput.value = cust?.cell ?? '';
+                nameInput.value = cust?.customer ?? '';
+            } catch (error) {
+                console.error('Fetch Error:', error);
+                showMessage('Could not connect to the server. Is it running?');
+                searchSection.classList.remove('hidden');
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        function displayCustomerData(customer) {
+            const txId = customer.TRANSACTIONID ?? customer.transactionId ?? '';
+            const coupons = Array.isArray(customer.COUPONS)
+                ? customer.COUPONS
+                : (Array.isArray(customer.couponNos) ? customer.couponNos : (customer.couponNo ? [customer.couponNo] : []));
+
+            document.getElementById('displayTransactionId').textContent = txId;
+            const list = document.getElementById('couponList');
+            if (list) {
+                list.innerHTML = '';
+                const items = (coupons && coupons.length ? coupons : []);
+                if (items.length === 0) {
+                    const empty = document.createElement('span');
+                    empty.className = 'inline-block text-gray-300 text-sm';
+                    empty.textContent = 'No coupons';
+                    list.appendChild(empty);
+                } else {
+                    for (const c of items) {
+                        const pill = document.createElement('span');
+                        pill.className = 'inline-block bg-indigo-600/20 text-indigo-100 px-3 py-2 rounded-lg font-mono text-sm break-all';
+                        pill.textContent = String(c ?? '');
+                        list.appendChild(pill);
+                    }
+                }
+            }
+
+            searchSection.classList.add('hidden');
+            customerDisplaySection.classList.remove('hidden');
+        }
+
+        async function handleFetchByCell() {
+            const digits = (cellInput.value || '').replace(/\D/g, '');
+            const errEl = document.getElementById('cellError');
+            if (digits.length < 11) {
+                errEl.classList.remove('hidden');
+                cellInput.focus();
+                return;
+            }
+            errEl.classList.add('hidden');
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/v1/customer/${digits}`);
+                if (!res.ok) throw new Error('Lookup failed');
+                const data = await res.json();
+                const found = data?.data?.customer || null;
+                if (found?.customer) {
+                    nameInput.value = found.customer;
+                    // showMessage('Customer found for this Phone Number.', false);
+                } else {
+                    nameInput.value = '';
+                    showMessage('No customer found for this Phone Number. Enter name manually.', true);
+                }
+                // Keep typed cell normalized in the input only (no header display)
+                cellInput.value = digits;
+            } catch (e) {
+                showMessage('Phone number not exist. Please add the customer.', true);
+            }
+        }
+
+        async function handleAddCustomer() {
+            const txId = document.getElementById('displayTransactionId').textContent.trim();
+            const name = nameInput.value.trim();
+            const digits = (cellInput.value || '').replace(/\D/g, '');
+            const errEl = document.getElementById('cellError');
+            if (digits.length < 11) {
+                errEl.classList.remove('hidden');
+                cellInput.focus();
+                return;
+            }
+            if (!name) {
+                showMessage('Please enter customer name.', true);
+                return;
+            }
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/customer`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ transactionId: txId, customer: name, cell: digits })
+                });
+                if (!response.ok) throw new Error('Create failed');
+                // reflect in inputs only (no header display)
+                showMessage('Customer added successfully.', false);
+            } catch (e) {
+                showMessage('Failed to add customer.', true);
+            }
+        }
+
+        // --- EVENT LISTENERS ---
+        searchBtn.addEventListener('click', handleSearch);
+        transactionIdInput.addEventListener('keyup', (event) => {
+            if (event.key === 'Enter') handleSearch();
+        });
+
+        // Inline handlers
+        addCustomerBtn.addEventListener('click', (e) => { e.preventDefault(); handleAddCustomer(); });
+        cellInput.addEventListener('input', (e) => {
+            const cleaned = e.target.value.replace(/\D/g, '');
+            if (cleaned !== e.target.value) e.target.value = cleaned;
+            if (cleaned.length >= 11) document.getElementById('cellError').classList.add('hidden');
+        });
+        cellInput.addEventListener('keyup', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                handleFetchByCell();
+            }
+        });
+        function buildReceiptText() {
+            const txId = (document.getElementById('displayTransactionId').textContent || '').trim();
+            const coupons = (lastFetchedTx && Array.isArray(lastFetchedTx.coupons)) ? lastFetchedTx.coupons : [];
+            const customerName = (document.getElementById('nameInput')?.value || '').trim();
+            const cellNo = (document.getElementById('cellInput')?.value || '').trim();
+            const now = new Date().toLocaleString();
+            const couponLines = coupons.map(c => `${c}`).join('\n');
+            const text = `\n\nCustomer  : ${customerName}\nCell No   : ${cellNo}\nReceipt No: ${txId}\nDate      : ${now}\n------------------------------------------\nCoupons:\n${couponLines}\n------------------------------------------\nPrinted on: ${now}\n------------------------------------------`.trim();
+            return text;
+        }
+
+        async function handlePrintTicket() {
+            const txId = (document.getElementById('displayTransactionId').textContent || '').trim();
+            if (!txId || !lastFetchedTx || !Array.isArray(lastFetchedTx.coupons) || lastFetchedTx.coupons.length === 0) {
+                showMessage('Nothing to print. Search a receipt first.', true);
+                return;
+            }
+            // Build standalone HTML for the hidden print window
+            const text = buildReceiptText();
+            const escaped = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+            const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Customer Receipt Print</title>
+  <style>
+    body { font-family: 'Courier New', monospace; font-size: 12px; line-height: 1.3; color: #000; background: #fff; width: 3in; }
+    h2 { text-align: center; font-size: 14px; margin: 0 0 5px 0; border-bottom: 1px dashed #000; padding-bottom: 3px; }
+    pre { white-space: pre-wrap; word-wrap: break-word; margin: 0; }
+    @page { size: 3in auto; margin: 4mm; }
+  </style>
+</head>
+<body>
+  <h2>Lucky Draw Coupons</h2>
+  <pre>${escaped}</pre>
+</body>
+</html>`;
+            try {
+                if (window.printer && typeof window.printer.ticket === 'function') {
+                    await window.printer.ticket(html);
+                } else {
+                    // Fallback to on-page print (may show dialog)
+                    const pre = document.getElementById('receiptText');
+                    if (pre) pre.textContent = text;
+                    window.print();
+                }
+            } catch (e) {
+                console.error(e);
+                const reason = (e && e.message) ? `: ${e.message}` : '';
+                showMessage(`Print failed${reason}.`, true);
+                // Optional: list available printers for quick diagnostics
+                try {
+                    if (window.printer && typeof window.printer.list === 'function') {
+                        const printers = await window.printer.list();
+                        const names = (printers || []).map(p => p.name).join('\n');
+                        if (names) {
+                            window.dialog?.show?.({ type: 'info', title: 'Available Printers', message: names });
+                        }
+                    }
+                } catch (_) {}
+            }
+        }
+
+        printBtn.addEventListener('click', (e) => { e.preventDefault(); handlePrintTicket(); });
+        searchAgainBtn.addEventListener('click', resetUI);
+        
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && !customerDisplaySection.classList.contains('hidden')) {
+                resetUI();
+            }
+        });
+
+        resetUI();
+    </script>
+</body>
+</html>
+

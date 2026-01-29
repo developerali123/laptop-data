@@ -1,0 +1,28 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlserver"
+  url      = env("DATABASE_URL")
+}
+
+model TmpCouponTable {
+  couponId        Int      @id @default(autoincrement()) @map("COUPONID")
+  transactionId   String?  @db.NVarChar(50) @map("TRANSACTIONID")
+  couponNo        String?  @db.NVarChar(100) @map("COUPONNO")
+  createdDateTime DateTime @default(now()) @db.DateTime @map("CREATEDDATETIME")
+
+  @@map("ax.TMPCOUPONTABLE") // maps model to actual table
+}
+
+model TmpCustomerTable {
+  couponId        Int      @id @default(autoincrement()) @map("COUPONID")
+  transactionId   String?  @unique @db.NVarChar(50) @map("TRANSACTIONID")
+  customer        String?  @db.NVarChar(100) @map("CUSTOMER")
+  cell            String?  @db.NVarChar(100) @map("CELL")
+  createdDateTime DateTime @default(now()) @db.DateTime @map("CREATEDDATETIME")
+
+  @@map("ax.TMPCUSTOMERTABLE") // maps model to actual table
+}
