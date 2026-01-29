@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: Arial, sans-serif; font-size: 8px; padding: 20px; }
+    h1, h2 { text-align: center; margin: 10px 0; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { border: 1px solid #ccc; padding: 4px; text-align: left; }
+    th { background-color: #f0f0f0; }
+    .section { margin-top: 40px; page-break-inside: avoid; }
+    .totals-row { font-weight: bold; background-color: #f9f9f9; }
+  </style>
+</head>
+<body>
+  <h1>Sales Invoice Report</h1>
+
+  {{#each invoices}}
+    <div class="section">
+
+      <table>
+        <tbody>
+          <tr>
+            <th>Invoice No.</th>
+            <th>Customer Name</th>
+            <th>Customer No</th>
+            <th>Posting Date</th>
+            <th>Document Date</th>
+            <th>FBR Invoice No</th>
+          </tr>
+          <tr>
+            <td>{{headerData.invoice_no}}</td>
+            <td>{{headerData.customer_name}}</td>
+            <td>{{headerData.customer_no}}</td>
+            <td>{{formatDate headerData.posting_date}}</td>
+            <td>{{formatDate headerData.document_date}}</td>
+            <td>{{headerData.fbrinvoiceno }}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Items Table -->
+      <table>
+        <thead>
+          <tr>
+            <th>Item No</th>
+            <th>HS Code</th>
+            <th>Uom</th>
+            <th>Qty</th>
+            <th>Unit Cost</th>
+            <th>Amount Before Discount</th>
+            <th>Discount</th>
+            <th>Discount Amount</th>
+            <th>Amount After Discount</th>
+            <th>Tax Rate</th>
+            <th>Tax Amount</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each items}}
+          <tr>
+            <td>{{item_no}}</td>
+            <td>{{hs_code}}</td>
+            <td>{{baseunitofmeasure}}</td>
+            <td>{{quantity}}</td>
+            <td>{{unit_cost}}</td>
+            <td>{{total_cost}}</td>
+            <td>{{discount}}%</td>
+            <td>{{discountamount}}</td>
+            <td>{{totalcostincludingdiscount}}</td>
+            <td>{{taxrate}}</td>
+            <td>{{totaltax}}</td>
+            <td>{{totalcostincludingtax}}</td>
+          </tr>
+          {{/each}}
+
+          <!-- Totals Per Invoice -->
+          <tr class="totals-row">
+            <td colspan="3"></td>
+            <td>{{headerTotalData.total_quantity}}</td>
+            <td></td>
+            <td>{{headerTotalData.totalcost}}</td>
+            <td></td>
+            <td>{{headerTotalData.totalcostincludingdiscount}}</td>
+            <td></td>
+            <td>{{headerTotalData.totaltax}}</td>
+            <td>{{headerTotalData.totalcostincludingtax}}</td>
+          </tr>
+          <tr>
+            <th>Further Tax</th>
+            <td>{{headerTotalData.furthertax}}</td>
+            <th>Further Tax Amount</th>
+            <td>{{headerTotalData.totalfurthertax}}</td>
+            <td>{{headerTotalData.totalcostincludingfurthertax}}</td>
+          </tr>
+          <tr>
+            <th>Advance Tax</th>
+            <td>{{headerTotalData.advancedtax}}</td>
+            <th>Advance Tax Amount</th>
+            <td>{{headerTotalData.totaladvancedtax}}</td>
+            <td>{{headerTotalData.totalcostincludingadvancedtax}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  {{/each}}
+
+  <!-- Overall Totals -->
+  <div class="section">
+    <h2>Overall Totals</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Total Quantity</th>
+          <th>Total Cost</th>
+          <th>Total Discount</th>
+          <th>Total Tax</th>
+          <th>Grand Total (with Tax)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="totals-row">
+          <td>{{totalData.totalcost}}</td>
+          <td>{{totalData.totalcostincludingdiscount}}</td>
+          <td>{{totalData.totaltax}}</td>
+          <td>{{totalData.totalcostincludingtax}}</td>
+          <td>{{totalData.furthertax}}</td>
+          <td>{{totalData.totalfurthertax}}</td>
+          <td>{{totalData.totalcostincludingfurthertax}}</td>
+          <td>{{totalData.advancedtax}}</td>
+          <td>{{totalData.totaladvancedtax}}</td>
+          <td>{{totalData.totalcostincludingadvancedtax}}</td>
+          <td>{{totalData.total_quantity}}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>

@@ -1,0 +1,61 @@
+@import "tailwindcss";
+
+/* 1. Theme Configuration (Tailwind v4 Style) */
+@theme {
+  /* --- COLORS --- */
+  /* Main Dark Background */
+  --color-brand-black: #050505;
+
+  /* Accent Color (Orange) */
+  --color-brand-orange: #f59e0b;
+
+  /* Additional Colors from your previous code */
+  --color-brand-yellow: #d9fd50;
+  --color-brand-gray: #f4f4f4;
+
+  /* --- FONTS --- */
+  /* Yeh 'layout.tsx' wale --font-inter variable se connect hoga */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  /* --- MASSIVE TEXT SIZES --- */
+  --text-7xl: 4.5rem;
+  --text-7xl--line-height: 1;
+
+  --text-8xl: 6rem;
+  --text-8xl--line-height: 0.95;
+
+  --text-massive: 8rem;
+  --text-massive--line-height: 0.9;
+
+  /* --- SPACING --- */
+  --tracking-tighter: -0.05em;
+  --tracking-tightest: -0.08em;
+}
+
+/* 2. Custom Utility Classes */
+@utility text-massive {
+  font-size: 8rem;
+  line-height: 0.9;
+  letter-spacing: -0.08em;
+
+  /* Mobile Responsive: Mobile par size chota ho jayega */
+  @media (max-width: 768px) {
+    font-size: 4rem;
+  }
+}
+
+/* 3. Global Base Styles */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  /* Default background set kiya taake 'layout.tsx' ke sath match kare */
+  background-color: var(--color-brand-black);
+  color: white;
+  font-family: var(--font-sans);
+
+  /* Text ko crisp dikhane ke liye */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

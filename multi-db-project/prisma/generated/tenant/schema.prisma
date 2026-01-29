@@ -1,0 +1,502 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/tenant"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL") // Will be dynamic at runtime
+}
+
+model Auth {
+  id     String @id @default(uuid())
+  userid String @unique
+  name   String
+  email  String @unique
+  role   Role
+}
+
+enum Role {
+  user
+  admin
+}
+
+model Profile {
+  id            String   @id @default(uuid())
+  name          String
+  address       String?
+  province      String?
+  provinceid    Int?
+  city          String?
+  post_code     String?
+  ntn_no        String?
+  strn_no       String?
+  contact_name  String?
+  mobile_number String?
+  logo          String?
+  token         String?
+  url           String?
+  hscodeapi     String?
+  uomapi        String?
+  saletyeapi    String?
+  scenarionoapi String?
+  email         String?
+  website       String?
+  fedmode       Boolean  @default(false)
+  sandbox       Boolean  @default(false)
+  printmapping  Boolean  @default(false)
+  showmapping   Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model TaxAreaCode {
+  id          String   @id @default(uuid())
+  code        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  customers       Customer[]
+  vendors         Vendor[]
+  taxcalculations TaxCalculation[]
+}
+
+model Customer {
+  id                 String             @id @default(uuid())
+  customer_no        String             @unique
+  name               String
+  address            String?
+  province           String?
+  city               String?
+  contact_name       String?
+  phone_no           String?
+  post_code          String?
+  email              String?
+  tax_area_code_id   String
+  mobile_number      String?
+  ntn_no             String?
+  strn_no            String?
+  website            String?
+  notes              String?
+  mappingid          String?
+  customer_type      CustomerVendorType
+  registation_status Boolean            @default(false)
+  isActive           Boolean            @default(false)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  taxAreaCode TaxAreaCode @relation(fields: [tax_area_code_id], references: [id])
+
+  salesinvoices         SalesInvoice[]
+  salesreturninvoices   SalesReturnInvoice[]
+  customerledgerentries CustomerLedgerEntry[]
+}
+
+enum CustomerVendorType {
+  Individual
+  Company
+  AOP
+  Government
+  Others
+}
+
+model Vendor {
+  id                 String             @id @default(uuid())
+  vendor_no          String             @unique
+  name               String
+  address            String?
+  province           String?
+  city               String?
+  contact_name       String?
+  phone_no           String?
+  post_code          String?
+  email              String?
+  tax_area_code_id   String
+  mobile_number      String?
+  ntn_no             String?
+  strn_no            String?
+  website            String?
+  notes              String?
+  mappingid          String?
+  vendor_type        CustomerVendorType
+  registation_status Boolean            @default(false)
+  isActive           Boolean            @default(false)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  taxAreaCode TaxAreaCode @relation(fields: [tax_area_code_id], references: [id])
+
+  purchaseinvoices      PurchaseInvoice[]
+  vendorledgerentries   VendorLedgerEntry[]
+  PurchaseReturnInvoice PurchaseReturnInvoice[]
+}
+
+// Enums
+enum ItemType {
+  inventory
+  service
+}
+
+enum CostingMethod {
+  fifo
+  average
+}
+
+model TaxGroupCode {
+  id          String   @id @default(uuid())
+  code        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  items           Item[]
+  taxcalculations TaxCalculation[]
+}
+
+model ItemCategoryCode {
+  id          String   @id @default(uuid())
+  code        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  items Item[]
+}
+
+model Item {
+  id                    String        @id @default(uuid())
+  item_no               String        @unique
+  hs_code               String
+  name                  String
+  uom                   String
+  type                  ItemType      @default(inventory)
+  unit_price            Float         @default(0)
+  retail_price          Float         @default(0)
+  assessed_unit         Float         @default(0)
+  costing_method        CostingMethod @default(fifo)
+  unit_cost             Float         @default(0)
+  total_quantity        Float         @default(0)
+  tax_group_code_id     String
+  saletype              String
+  sroscheduleno         String
+  itemserialno          String
+  ratedesc              String
+  rateid                Int
+  ratevalue             Float         @default(0)
+  item_category_code_id String?
+  mappingid             String?
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  taxGroupCode     TaxGroupCode      @relation(fields: [tax_group_code_id], references: [id])
+  itemCategoryCode ItemCategoryCode? @relation(fields: [item_category_code_id], references: [id])
+
+  purchaseinvoiceitems       PurchaseInvoiceItem[]
+  salesinvoiceitems          SalesInvoiceItem[]
+  salesreturninvoiceitems    SalesReturnInvoiceItem[]
+  purchasereturninvoiceitems PurchaseReturnInvoiceItem[]
+  inventoryadjustmentitems   InventoryAdjustmentItem[]
+  itemledgerentries          ItemLedgerEntry[]
+}
+
+model TaxCalculation {
+  id                String   @id @default(uuid())
+  tax_group_code_id String
+  tax_group_area_id String
+  description       String?
+  percentage        Float    @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  taxGroupCode TaxGroupCode @relation(fields: [tax_group_code_id], references: [id])
+  TaxAreaCode  TaxAreaCode  @relation(fields: [tax_group_area_id], references: [id])
+}
+
+model PurchaseInvoice {
+  id                            String   @id @default(uuid())
+  invoice_no                    String   @unique
+  vendor_id                     String
+  vendor_invoice_no             String?
+  notes                         String?
+  posting_date                  DateTime
+  document_date                 DateTime
+  posted                        Boolean  @default(false)
+  totalcost                     Float    @default(0)
+  totaltax                      Float    @default(0)
+  totalcostincludingtax         Float    @default(0)
+  advancedtax                   Float    @default(0)
+  totaladvancedtax              Float    @default(0)
+  totalcostincludingadvancedtax Float    @default(0)
+  createdAt                     DateTime @default(now())
+  updatedAt                     DateTime @updatedAt
+
+  vendor                Vendor                  @relation(fields: [vendor_id], references: [id])
+  items                 PurchaseInvoiceItem[]
+  PurchaseReturnInvoice PurchaseReturnInvoice[]
+}
+
+model PurchaseInvoiceItem {
+  id                         String   @id @default(uuid())
+  purchase_invoice_id        String
+  item_id                    String
+  quantity                   Float    @default(1)
+  unit_price                 Float    @default(0)
+  unit_cost                  Float    @default(0)
+  total_cost                 Float    @default(0)
+  discount                   Float    @default(0)
+  discountamount             Float    @default(0)
+  totalcostincludingdiscount Float    @default(0)
+  taxrate                    Float    @default(0)
+  total_tax                  Float    @default(0)
+  totalcostincludingtax      Float    @default(0)
+  createdAt                  DateTime @default(now())
+  updatedAt                  DateTime @updatedAt
+
+  purchaseInvoice PurchaseInvoice @relation(fields: [purchase_invoice_id], references: [id])
+  item            Item            @relation(fields: [item_id], references: [id])
+}
+
+model SalesInvoice {
+  id                            String   @id @default(uuid())
+  invoice_no                    String   @unique
+  customer_id                   String
+  scenario_no                   String?
+  notes                         String?
+  posting_date                  DateTime
+  document_date                 DateTime
+  posted                        Boolean  @default(false)
+  totalassessedunit             Float    @default(0)
+  totalfedamount                Float    @default(0)
+  totalcost                     Float    @default(0)
+  totaldiscount                 Float    @default(0)
+  totalcostincludingdiscount    Float    @default(0)
+  totaltax                      Float    @default(0)
+  totalfurthertax               Float    @default(0)
+  totalcostincludingtax         Float    @default(0)
+  totalcostincludingfurthertax  Float    @default(0)
+  advancedtax                   Float    @default(0)
+  totaladvancedtax              Float    @default(0)
+  totalcostincludingadvancedtax Float    @default(0)
+  fbrinvoiceno                  String?
+  createdAt                     DateTime @default(now())
+  updatedAt                     DateTime @updatedAt
+
+  customer            Customer             @relation(fields: [customer_id], references: [id])
+  items               SalesInvoiceItem[]
+  salesinvoicereturns SalesReturnInvoice[]
+}
+
+model SalesInvoiceItem {
+  id                           String   @id @default(uuid())
+  sales_invoice_id             String
+  item_id                      String
+  quantity                     Float    @default(1)
+  unit_price                   Float    @default(0)
+  retail_price                 Float    @default(0)
+  assessed_unit                Float    @default(0)
+  total_assessed_unit          Float    @default(0)
+  unit_cost                    Float    @default(0)
+  total_cost                   Float    @default(0)
+  discount                     Float    @default(0)
+  discountamount               Float    @default(0)
+  furthertax                   Float    @default(0)
+  furtertaxamount              Float    @default(0)
+  fed                          Float    @default(0)
+  fedamount                    Float    @default(0)
+  totalcostincludingdiscount   Float    @default(0)
+  taxrate                      Float    @default(0)
+  total_tax                    Float    @default(0)
+  totalcostincludingtax        Float    @default(0)
+  totalcostincludingfurthertax Float    @default(0)
+  createdAt                    DateTime @default(now())
+  updatedAt                    DateTime @updatedAt
+
+  salesInvoice SalesInvoice @relation(fields: [sales_invoice_id], references: [id])
+  item         Item         @relation(fields: [item_id], references: [id])
+}
+
+enum DocumentType {
+  SalesInvoice
+  SalesReturn
+  PurchaseInvoice
+  PurchaseReturn
+  InventoryAdjustment
+}
+
+enum SourceType {
+  customer
+  vendor
+  Inventory
+}
+
+model VendorLedgerEntry {
+  entry_no      Int          @id @default(autoincrement())
+  vendor_id     String
+  invoice_id    String?
+  document_type DocumentType
+
+  vendor Vendor @relation(fields: [vendor_id], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CustomerLedgerEntry {
+  entry_no      Int          @id @default(autoincrement())
+  customer_id   String
+  invoice_id    String?
+  document_type DocumentType
+
+  customer Customer @relation(fields: [customer_id], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ItemLedgerEntry {
+  entry_no        Int          @id @default(autoincrement())
+  item_id         String
+  document_type   DocumentType
+  source_type     SourceType
+  invoice_id      String?
+  invoice_item_id String?
+
+  item Item @relation(fields: [item_id], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SalesReturnInvoice {
+  id                            String   @id @default(uuid())
+  invoice_no                    String   @unique
+  sales_invoice_id              String
+  scenario_no                   String?
+  customer_id                   String
+  notes                         String?
+  posting_date                  DateTime
+  document_date                 DateTime
+  posted                        Boolean  @default(false)
+  totalassessedunit             Float    @default(0)
+  totalfedamount                Float    @default(0)
+  totalcost                     Float    @default(0)
+  totaldiscount                 Float    @default(0)
+  totalcostincludingdiscount    Float    @default(0)
+  totaltax                      Float    @default(0)
+  totalfurthertax               Float    @default(0)
+  totalcostincludingtax         Float    @default(0)
+  totalcostincludingfurthertax  Float    @default(0)
+  advancedtax                   Float    @default(0)
+  totaladvancedtax              Float    @default(0)
+  totalcostincludingadvancedtax Float    @default(0)
+  fbrinvoiceno                  String?
+  createdAt                     DateTime @default(now())
+  updatedAt                     DateTime @updatedAt
+
+  customer     Customer                 @relation(fields: [customer_id], references: [id])
+  salesinvoice SalesInvoice             @relation(fields: [sales_invoice_id], references: [id])
+  items        SalesReturnInvoiceItem[]
+}
+
+model SalesReturnInvoiceItem {
+  id                           String   @id @default(uuid())
+  sales_return_invoice_id      String
+  item_id                      String
+  quantity                     Float    @default(1)
+  unit_price                   Float    @default(0)
+  retail_price                 Float    @default(0)
+  assessed_unit                Float    @default(0)
+  total_assessed_unit          Float    @default(0)
+  unit_cost                    Float    @default(0)
+  total_cost                   Float    @default(0)
+  discount                     Float    @default(0)
+  discountamount               Float    @default(0)
+  furthertax                   Float    @default(0)
+  furtertaxamount              Float    @default(0)
+  fed                          Float    @default(0)
+  fedamount                    Float    @default(0)
+  totalcostincludingdiscount   Float    @default(0)
+  taxrate                      Float    @default(0)
+  total_tax                    Float    @default(0)
+  totalcostincludingtax        Float    @default(0)
+  totalcostincludingfurthertax Float    @default(0)
+  createdAt                    DateTime @default(now())
+  updatedAt                    DateTime @updatedAt
+
+  SalesReturnInvoice SalesReturnInvoice @relation(fields: [sales_return_invoice_id], references: [id])
+  item               Item               @relation(fields: [item_id], references: [id])
+}
+
+model PurchaseReturnInvoice {
+  id                            String   @id @default(uuid())
+  invoice_no                    String   @unique
+  purchase_invoice_id           String
+  notes                         String?
+  vendor_id                     String
+  vendor_invoice_no             String?
+  posting_date                  DateTime
+  document_date                 DateTime
+  posted                        Boolean  @default(false)
+  totalcost                     Float    @default(0)
+  totaltax                      Float    @default(0)
+  totalcostincludingtax         Float    @default(0)
+  advancedtax                   Float    @default(0)
+  totaladvancedtax              Float    @default(0)
+  totalcostincludingadvancedtax Float    @default(0)
+  createdAt                     DateTime @default(now())
+  updatedAt                     DateTime @updatedAt
+
+  vendor          Vendor                      @relation(fields: [vendor_id], references: [id])
+  purchaseinvoice PurchaseInvoice             @relation(fields: [purchase_invoice_id], references: [id])
+  items           PurchaseReturnInvoiceItem[]
+}
+
+model PurchaseReturnInvoiceItem {
+  id                         String   @id @default(uuid())
+  purchase_return_invoice_id String
+  item_id                    String
+  quantity                   Float    @default(1)
+  unit_price                 Float    @default(0)
+  unit_cost                  Float    @default(0)
+  discount                   Float    @default(0)
+  discountamount             Float    @default(0)
+  totalcostincludingdiscount Float    @default(0)
+  total_cost                 Float    @default(0)
+  total_tax                  Float    @default(0)
+  taxrate                    Float    @default(0)
+  totalcostincludingtax      Float    @default(0)
+  createdAt                  DateTime @default(now())
+  updatedAt                  DateTime @updatedAt
+
+  purchasereturnInvoice PurchaseReturnInvoice @relation(fields: [purchase_return_invoice_id], references: [id])
+  item                  Item                  @relation(fields: [item_id], references: [id])
+}
+
+model InventoryAdjustment {
+  id            String   @id @default(uuid())
+  adjustment_no String   @unique
+  posting_date  DateTime
+  document_date DateTime
+  posted        Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  items InventoryAdjustmentItem[]
+}
+
+model InventoryAdjustmentItem {
+  id                      String   @id @default(uuid())
+  inventory_adjustment_id String
+  item_id                 String
+  quantity                Float    @default(1)
+  posted                  Boolean  @default(false)
+  unit_price              Float    @default(0)
+  unit_cost               Float    @default(0)
+  total_cost              Float    @default(0)
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  inventoryadjustment InventoryAdjustment @relation(fields: [inventory_adjustment_id], references: [id])
+  item                Item                @relation(fields: [item_id], references: [id])
+}
